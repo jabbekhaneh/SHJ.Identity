@@ -10,12 +10,58 @@ namespace SHJ.Identity.Services;
 public abstract class UserService : IdentityControllerBase
 {
     protected readonly UserManager<User> _userManager;
-
-    protected UserService(UserManager<User> userManager)
+    protected readonly RoleManager<Role> _roleManager;
+    protected UserService(UserManager<User> userManager, RoleManager<Role> roleManager)
     {
         _userManager = userManager;
+        _roleManager = roleManager;
     }
 
+    [HttpDelete("DeleteRoles")]
+    public virtual async Task<IActionResult> DeleteRoles(DeleteRoleToUserDto input)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+
+        if (input.RoleIds.Count <= 0)
+            throw new IdentityException(GlobalErrorIdentity.TheListOfRolesIsEmpty, "The list of roles is empty");
+
+        var user = await _userManager.FindByIdAsync(input.UserId.ToString());
+
+        if (user == null) throw new IdentityException(GlobalErrorIdentity.NotFoundUser);
+
+        var roles = await _roleManager.Roles.Where(_ => input.RoleIds.Contains(_.Id))
+            .Select(_ => _.Name).ToListAsync();
+
+        if (!roles.Any()) throw new IdentityException(GlobalErrorIdentity.TheListOfRolesIsEmpty, "The list of roles is empty");
+
+        await _userManager.RemoveFromRolesAsync(user, roles);
+
+        return Ok();
+
+    }
+    [HttpPost("AddRoles")]
+    public virtual async Task<IActionResult> AddRoles(AddRoleToUserDto input)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+        
+        if (input.RoleIds.Count <= 0)
+            throw new IdentityException(GlobalErrorIdentity.TheListOfRolesIsEmpty, "The list of roles is empty");
+
+        var user = await _userManager.FindByIdAsync(input.UserId.ToString());
+
+        if (user == null) throw new IdentityException(GlobalErrorIdentity.NotFoundUser);
+
+        var roles = await _roleManager.Roles.Where(_ => input.RoleIds.Contains(_.Id))
+            .Select(_ => _.Name).ToListAsync();
+
+        if (!roles.Any()) throw new IdentityException(GlobalErrorIdentity.TheListOfRolesIsEmpty, "The list of roles is empty");
+
+        await _userManager.AddToRolesAsync(user, roles);
+
+        return Ok();
+    }
     [HttpGet]
     public virtual async Task<IActionResult> Get(IdentityFilterDto input)
     {
@@ -51,19 +97,16 @@ public abstract class UserService : IdentityControllerBase
         }).ToListAsync();
         return Ok();
     }
-
     [HttpGet("{id}")]
     public virtual async Task<IActionResult> Get(Guid id)
     {
         var user = await _userManager.FindByIdAsync(id.ToString());
 
-        if (user == null) return NotFound();
+        if (user == null) throw new IdentityException(GlobalErrorIdentity.NotFoundUser);
+
         UserDto userInfo = MapUserDto(user);
         return Ok(userInfo);
     }
-
-
-
     [HttpPut]
     public virtual async Task<IActionResult> Edit(EditUserDto input)
     {
@@ -94,7 +137,16 @@ public abstract class UserService : IdentityControllerBase
 
         return Ok(result);
     }
+    [HttpDelete]
+    public virtual async Task<IActionResult> Delete(Guid id)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user == null) throw new IdentityException(GlobalErrorIdentity.NotFoundUser);
+        
+        await _userManager.DeleteAsync(user);
 
+        return Ok();
+    }
 
 
     #region PrivateMethods

@@ -1,4 +1,6 @@
-﻿namespace SHJ.Identity.Shared;
+﻿using System.Collections.Generic;
+
+namespace SHJ.Identity.Shared;
 
 public class IdentityException : Exception
 {
@@ -18,5 +20,6 @@ public static class GlobalErrorIdentity
     public const string NotFoundUser = $"{Identity}-503";
     public const string AccessDenied = $"{Identity}-504";
     public const string DublicateEmail = $"{Identity}-505";
+    public const string TheListOfRolesIsEmpty = $"{Identity}-506";
 }
 
