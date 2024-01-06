@@ -5,7 +5,7 @@ using SHJ.Identity.Options;
 
 namespace SHJ.Identity.Emailing;
 
-public class EmailSender : IEmailSenders
+public class EmailSender 
 {
     private IOptions<MailingSmtpOptions> _options;
     public EmailSender(IOptions<MailingSmtpOptions> options)

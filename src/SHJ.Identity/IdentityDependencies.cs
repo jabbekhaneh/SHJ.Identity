@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SHJ.Identity.Entities;
 using System.Diagnostics.CodeAnalysis;
@@ -11,7 +12,7 @@ public static class IdentityDependencies
 {
 
     public static IServiceCollection SHJRegiterIdentity<TDbContext>(this IServiceCollection services, Action<IdentityOptions> setupAction)
-         where TDbContext : IdentityDbContext
+         where TDbContext : DbContext
     {
 
         services.AddIdentity<User, Role>(setupAction).AddEntityFrameworkStores<TDbContext>()//MANAGERS

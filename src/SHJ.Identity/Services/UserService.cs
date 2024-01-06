@@ -11,13 +11,15 @@ public abstract class UserService : IdentityControllerBase
 {
     protected readonly UserManager<User> _userManager;
     protected readonly RoleManager<Role> _roleManager;
+
     protected UserService(UserManager<User> userManager, RoleManager<Role> roleManager)
     {
         _userManager = userManager;
         _roleManager = roleManager;
     }
 
-    [HttpDelete("DeleteRoles")]
+
+    [HttpDelete("Roles")]
     public virtual async Task<IActionResult> DeleteRoles(DeleteRoleToUserDto input)
     {
         if (!ModelState.IsValid)
@@ -40,12 +42,12 @@ public abstract class UserService : IdentityControllerBase
         return Ok();
 
     }
-    [HttpPost("AddRoles")]
+    [HttpPost("Roles")]
     public virtual async Task<IActionResult> AddRoles(AddRoleToUserDto input)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
-        
+
         if (input.RoleIds.Count <= 0)
             throw new IdentityException(GlobalErrorIdentity.TheListOfRolesIsEmpty, "The list of roles is empty");
 
@@ -53,14 +55,29 @@ public abstract class UserService : IdentityControllerBase
 
         if (user == null) throw new IdentityException(GlobalErrorIdentity.NotFoundUser);
 
-        var roles = await _roleManager.Roles.Where(_ => input.RoleIds.Contains(_.Id))
-            .Select(_ => _.Name).ToListAsync();
+        var userRoles = await _userManager.GetRolesAsync(user);
 
-        if (!roles.Any()) throw new IdentityException(GlobalErrorIdentity.TheListOfRolesIsEmpty, "The list of roles is empty");
+        var roleNames = await _roleManager.Roles.Where(_ => input.RoleIds.Contains(_.Id)).Select(_ => _.Name).ToListAsync();
 
-        await _userManager.AddToRolesAsync(user, roles);
+        var addRoles = roleNames.Where(_name => !userRoles.Any(it => it == _name));
+
+        if (!roleNames.Any()) throw new IdentityException(GlobalErrorIdentity.TheListOfRolesIsEmpty, "The list of roles is empty");
+
+
+        await _userManager.AddToRolesAsync(user, addRoles);
 
         return Ok();
+    }
+    [HttpGet("Roles/{id}")]
+    public virtual async Task<IActionResult> GetRoles(Guid id)
+    {
+        var user =await _userManager.FindByIdAsync(id.ToString());
+
+        if (user == null) throw new IdentityException(GlobalErrorIdentity.NotFoundUser, id.ToString());
+        
+        var roles =await _userManager.GetRolesAsync(user);
+
+        return Ok(roles.Select(_ => new UserRolesDto(_)).ToList());
     }
     [HttpGet]
     public virtual async Task<IActionResult> Get(IdentityFilterDto input)
@@ -119,6 +136,16 @@ public abstract class UserService : IdentityControllerBase
 
         return Ok(result);
     }
+    [HttpDelete]
+    public virtual async Task<IActionResult> Delete(Guid id)
+    {
+        var user = await _userManager.FindByIdAsync(id.ToString());
+        if (user == null) throw new IdentityException(GlobalErrorIdentity.NotFoundUser);
+
+        await _userManager.DeleteAsync(user);
+
+        return Ok();
+    }
     [HttpPost]
     public virtual async Task<IActionResult> CreateUser(CreateUserDto input)
     {
@@ -137,18 +164,6 @@ public abstract class UserService : IdentityControllerBase
 
         return Ok(result);
     }
-    [HttpDelete]
-    public virtual async Task<IActionResult> Delete(Guid id)
-    {
-        var user = await _userManager.FindByIdAsync(id.ToString());
-        if (user == null) throw new IdentityException(GlobalErrorIdentity.NotFoundUser);
-        
-        await _userManager.DeleteAsync(user);
-
-        return Ok();
-    }
-
-
     #region PrivateMethods
     private static User MapCreateUserDto(CreateUserDto input)
     {
