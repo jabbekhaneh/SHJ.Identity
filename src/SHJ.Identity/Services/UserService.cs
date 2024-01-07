@@ -42,6 +42,7 @@ public abstract class UserService : IdentityControllerBase
         return Ok();
 
     }
+
     [HttpPost("Roles")]
     public virtual async Task<IActionResult> AddRoles(AddRoleToUserDto input)
     {
@@ -68,6 +69,7 @@ public abstract class UserService : IdentityControllerBase
 
         return Ok();
     }
+
     [HttpGet("Roles/{id}")]
     public virtual async Task<IActionResult> GetRoles(Guid id)
     {
@@ -79,6 +81,7 @@ public abstract class UserService : IdentityControllerBase
 
         return Ok(roles.Select(_ => new UserRolesDto(_)).ToList());
     }
+
     [HttpGet]
     public virtual async Task<IActionResult> Get(IdentityFilterDto input)
     {
@@ -114,6 +117,7 @@ public abstract class UserService : IdentityControllerBase
         }).ToListAsync();
         return Ok();
     }
+
     [HttpGet("{id}")]
     public virtual async Task<IActionResult> Get(Guid id)
     {
@@ -124,6 +128,7 @@ public abstract class UserService : IdentityControllerBase
         UserDto userInfo = MapUserDto(user);
         return Ok(userInfo);
     }
+
     [HttpPut]
     public virtual async Task<IActionResult> Edit(EditUserDto input)
     {
@@ -136,6 +141,7 @@ public abstract class UserService : IdentityControllerBase
 
         return Ok(result);
     }
+
     [HttpDelete]
     public virtual async Task<IActionResult> Delete(Guid id)
     {
@@ -146,6 +152,7 @@ public abstract class UserService : IdentityControllerBase
 
         return Ok();
     }
+
     [HttpPost]
     public virtual async Task<IActionResult> CreateUser(CreateUserDto input)
     {
@@ -164,6 +171,8 @@ public abstract class UserService : IdentityControllerBase
 
         return Ok(result);
     }
+
+
     #region PrivateMethods
     private static User MapCreateUserDto(CreateUserDto input)
     {

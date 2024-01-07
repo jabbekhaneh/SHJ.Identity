@@ -19,6 +19,7 @@ public static class IdentityDependencies
           .AddDefaultTokenProviders();// TOKEN MANAGERS
         return services;
     }
+
     /// <summary>
     ///  required using  SHJUserAuth for use identity
     /// </summary>
